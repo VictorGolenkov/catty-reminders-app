@@ -4,6 +4,7 @@
 Показывает как Git события могут запускать автоматические процессы
 """
 
+import requests
 import tempfile
 import subprocess
 import os
@@ -31,6 +32,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         # Парсим JSON
         try:
             payload = json.loads(body.decode('utf-8'))
+            self.payload = payload
             self._process_webhook(payload)
 
             # Отвечаем успехом
@@ -109,6 +111,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         branch = payload.get('ref', '').replace('refs/heads/', '')
         pusher = payload.get('pusher', {}).get('name', 'unknown')
         clone_url = payload.get('repository', {}).get('clone_url', 'unknown')
+        commit_sha = payload.get('after', '')
 
         print(f"   📝 Push в ветку: {branch}")
         print(f"   👤 Автор: {pusher}")
@@ -149,16 +152,21 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
                 # Только если тесты прошли - запускаем деплой
                 print(f"      - Запуск деплоя...")
-                subprocess.run(
-                    ["./deploy.sh"],
-                    cwd=tmpdir,
-                    check=True
-                )
+                try:
+                    subprocess.run(
+                        ["./deploy.sh", branch],
+                        cwd=tmpdir,
+                        check=True
+                    )
+                    self._send_deployment_status(commit_sha, "success", "Deployed successfully")
+                except subprocess.CalledProcessError:
+                    self._send_deployment_status(commit_sha, "failure", "Deployment failed")
                 print(f"      ✅ Деплой завершен успешно!")
 
             except subprocess.CalledProcessError as e:
                 print(f"      ❌ Тесты упали! Деплой ОТМЕНЕН")
                 print(f"         {e.stdout if e.stdout else 'Нет вывода'}")
+                self._send_deployment_status(commit_sha, "failure", "Deployment failed")
                 if e.stderr:
                     print(f"         Ошибка: {e.stderr}")
                 return
@@ -179,6 +187,29 @@ class WebhookHandler(BaseHTTPRequestHandler):
         tag_name = payload.get('release', {}).get('tag_name', '')
 
         print(f"   🏷️  Release {tag_name}: {action}")
+
+    def _send_deployment_status(self, commit_sha, state, description="Deployment completed"):
+        """Отправка статуса развертывания в GitHub"""
+        repo = payload.get('repository', {}).get('full_name', '')
+        token = os.environ.get('GITHUB_TOKEN')  # В реальности нужно использовать секреты
+
+        url = f"https://api.github.com/repos/{repo}/statuses/{commit_sha}"
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        data = {
+            "state": state,  # "success", "failure", "pending"
+            "description": description,
+            "context": "deployment/webhook"
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            print(f"   ✅ Статус отправлен в GitHub: {state}")
+        except Exception as e:
+            print(f"   ❌ Ошибка отправки статуса: {e}")
 
 def main():
     """Запуск webhook сервера"""
