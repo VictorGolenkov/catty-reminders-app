@@ -1,13 +1,18 @@
 #!/bin/bash
 echo "🚀 Начинаем развертывание catty-reminders-app..."
 
+BRANCH=$1
+
 # Путь к проекту (измените на свой)
 APP_DIR="/home/victor/Desktop/DevOps/Lab_1/catty-reminders-app"
+
 
 # 1. Обновляем код
 echo "📦 Обновляем код из репозитория..."
 cd $APP_DIR
-git pull
+git fetch origin
+git checkout $BRANCH
+git pull origin $BRANCH
 
 # 2. Если есть зависимости, обновляем их (убедитесь, что pip3 установлен)
 if [ -f "requirements.txt" ]; then
