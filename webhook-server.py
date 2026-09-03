@@ -14,9 +14,11 @@ import hmac
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import sys
+import logging
 
 # Конфигурация
 PORT = 8080
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class WebhookHandler(BaseHTTPRequestHandler):
 
@@ -42,7 +44,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'{"status": "success"}')
 
         except json.JSONDecodeError:
-            print("❌ Ошибка парсинга JSON")
+            logging.error("❌ Ошибка парсинга JSON")
             self.send_response(400)
             self.end_headers()
 
@@ -90,10 +92,10 @@ class WebhookHandler(BaseHTTPRequestHandler):
         repo_name = payload.get('repository', {}).get('full_name', 'unknown')
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        print(f"\n🔔 Получено webhook событие:")
-        print(f"   Время: {timestamp}")
-        print(f"   Тип события: {event_type}")
-        print(f"   Репозиторий: {repo_name}")
+        logging.info(f"\n🔔 Получено webhook событие:")
+        logging.info(f"   Время: {timestamp}")
+        logging.info(f"   Тип события: {event_type}")
+        logging.info(f"   Репозиторий: {repo_name}")
 
         # Обрабатываем разные типы событий
         if event_type == 'push':
@@ -103,7 +105,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         elif event_type == 'release':
             self._handle_release_event(payload)
         else:
-            print(f"   ℹ️  Событие '{event_type}' - базовое логирование")
+            logging.info(f"   ℹ️  Событие '{event_type}' - базовое логирование")
 
     def _handle_push_event(self, payload):
         """Обработка push события"""
@@ -113,17 +115,17 @@ class WebhookHandler(BaseHTTPRequestHandler):
         clone_url = payload.get('repository', {}).get('clone_url', 'unknown')
         commit_sha = payload.get('after', '')
 
-        print(f"   📝 Push в ветку: {branch}")
-        print(f"   👤 Автор: {pusher}")
-        print(f"   📊 Коммитов: {len(commits)}")
+        logging.info(f"   📝 Push в ветку: {branch}")
+        logging.info(f"   👤 Автор: {pusher}")
+        logging.info(f"   📊 Коммитов: {len(commits)}")
 
         # Имитируем автоматические действия
-        print(f"   🚀 ЗАПУСКАЕМ АВТОМАТИЗАЦИЮ:")
-        print(f"      - Запуск тестов для ветки {branch}")
-        print(f"      - Проверка качества кода")
+        logging.info(f"   🚀 ЗАПУСКАЕМ АВТОМАТИЗАЦИЮ:")
+        logging.info(f"      - Запуск тестов для ветки {branch}")
+        logging.info(f"      - Проверка качества кода")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            print(f"Временная директория: {tmpdir}")
+            logging.info(f"Временная директория: {tmpdir}")
 
             # Выполняем git clone
             token = os.environ.get('GITHUB_TOKEN')
@@ -140,7 +142,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             )
 
             # Запускаем тесты перед деплоем
-            print(f"      - Запуск тестов...")
+            logging.info(f"      - Запуск тестов...")
             try:
                 result = subprocess.run(
                     ["./test.sh"],
@@ -149,11 +151,11 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     capture_output=True,
                     text=True
                 )
-                print(f"      ✅ Тесты прошли успешно!")
-                print(f"         {result.stdout.strip()}")
+                logging.info(f"      ✅ Тесты прошли успешно!")
+                logging.info(f"         {result.stdout.strip()}")
 
                 # Только если тесты прошли - запускаем деплой
-                print(f"      - Запуск деплоя...")
+                logging.info(f"      - Запуск деплоя...")
                 try:
                     subprocess.run(
                         ["./deploy.sh", branch],
@@ -163,14 +165,14 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     self._send_deployment_status(commit_sha, "success", "Deployed successfully")
                 except subprocess.CalledProcessError:
                     self._send_deployment_status(commit_sha, "failure", "Deployment failed")
-                print(f"      ✅ Деплой завершен успешно!")
+                logging.info(f"      ✅ Деплой завершен успешно!")
 
             except subprocess.CalledProcessError as e:
-                print(f"      ❌ Тесты упали! Деплой ОТМЕНЕН")
-                print(f"         {e.stdout if e.stdout else 'Нет вывода'}")
+                logging.error(f"      ❌ Тесты упали! Деплой ОТМЕНЕН")
+                logging.error(f"         {e.stdout if e.stdout else 'Нет вывода'}")
                 self._send_deployment_status(commit_sha, "failure", "Deployment failed")
                 if e.stderr:
-                    print(f"         Ошибка: {e.stderr}")
+                    logging.error(f"         Ошибка: {e.stderr}")
                 return
 
 
@@ -180,15 +182,15 @@ class WebhookHandler(BaseHTTPRequestHandler):
         pr_number = payload.get('pull_request', {}).get('number', '')
         title = payload.get('pull_request', {}).get('title', '')
 
-        print(f"   🔀 Pull Request #{pr_number}: {action}")
-        print(f"   📋 Заголовок: {title}")
+        logging.info(f"   🔀 Pull Request #{pr_number}: {action}")
+        logging.info(f"   📋 Заголовок: {title}")
 
     def _handle_release_event(self, payload):
         """Обработка Release события"""
         action = payload.get('action', '')
         tag_name = payload.get('release', {}).get('tag_name', '')
 
-        print(f"   🏷️  Release {tag_name}: {action}")
+        logging.info(f"   🏷️  Release {tag_name}: {action}")
 
     def _send_deployment_status(self, commit_sha, state, description="Deployment completed"):
         """Отправка статуса развертывания в GitHub."""
@@ -205,32 +207,32 @@ class WebhookHandler(BaseHTTPRequestHandler):
             "state": state,
             "description": description,
             "context": "deployment/webhook",
-            "target_url": "http://app.golenkov.course.pradfin.ru"
+            "target_url": "http://app.golenkov.course.prafdin.space"
         }
 
         try:
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
-            print(f"   ✅ Статус '{state}' отправлен в GitHub для коммита {commit_sha[:7]}")
+            logging.info(f"   ✅ Статус '{state}' отправлен в GitHub для коммита {commit_sha[:7]}")
         except Exception as e:
-            print(f"   ❌ Ошибка отправки статуса: {e}")
+            logging.error(f"   ❌ Ошибка отправки статуса: {e}")
 
 def main():
     """Запуск webhook сервера"""
 
-    print(f"🚀 Запуск DevOps Webhook Demo Server")
-    print(f"📡 Порт: {PORT}")
-    print(f"🌐 URL: http://0.0.0.0:{PORT}")
-    print(f"🔧 Webhook URL: http://0.0.0.0:{PORT}/webhook")
-    print(f"⏰ Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"\n👀 Ожидание webhook событий от GitHub...")
-    print(f"💡 Для остановки: Ctrl+C\n")
+    logging.info(f"🚀 Запуск DevOps Webhook Demo Server")
+    logging.info(f"📡 Порт: {PORT}")
+    logging.info(f"🌐 URL: http://0.0.0.0:{PORT}")
+    logging.info(f"🔧 Webhook URL: http://0.0.0.0:{PORT}/webhook")
+    logging.info(f"⏰ Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"\n👀 Ожидание webhook событий от GitHub...")
+    logging.info(f"💡 Для остановки: Ctrl+C\n")
 
     try:
         server = HTTPServer(('0.0.0.0', PORT), WebhookHandler)
         server.serve_forever()
     except KeyboardInterrupt:
-        print(f"\n🛑 Сервер остановлен")
+        logging.error(f"\n🛑 Сервер остановлен")
 
 if __name__ == '__main__':
     main()
