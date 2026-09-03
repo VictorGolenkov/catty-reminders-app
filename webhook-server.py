@@ -204,8 +204,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
         data = {
             "state": state,
             "description": description,
-            "context": "deployment/webhook"
-            "target_url": f"http://app.golenkov.course.pradfin.ru"
+            "context": "deployment/webhook",
+            "target_url": "http://app.golenkov.course.pradfin.ru"
         }
 
         try:
