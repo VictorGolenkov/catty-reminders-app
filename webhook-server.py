@@ -205,6 +205,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             "state": state,
             "description": description,
             "context": "deployment/webhook"
+            "target_url": f"http://app.golenkov.course.pradfin.ru"
         }
 
         try:
