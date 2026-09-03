@@ -126,6 +126,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
             print(f"Временная директория: {tmpdir}")
 
             # Выполняем git clone
+            token = os.environ.get('GITHUB_TOKEN')
+            clone_url = f"https://{token}@github.com/VictorGolenkov/catty-reminders-app.git"
             subprocess.run(
                 ["git", "clone", clone_url, tmpdir],
                 check=True
@@ -189,9 +191,10 @@ class WebhookHandler(BaseHTTPRequestHandler):
         print(f"   🏷️  Release {tag_name}: {action}")
 
     def _send_deployment_status(self, commit_sha, state, description="Deployment completed"):
-        """Отправка статуса развертывания в GitHub"""
-        repo = payload.get('repository', {}).get('full_name', '')
-        token = os.environ.get('GITHUB_TOKEN')  # В реальности нужно использовать секреты
+        """Отправка статуса развертывания в GitHub."""
+        # Используем self.payload, который был сохранен в do_POST
+        repo = self.payload.get('repository', {}).get('full_name', '')
+        token = os.environ.get('GITHUB_TOKEN')
 
         url = f"https://api.github.com/repos/{repo}/statuses/{commit_sha}"
         headers = {
@@ -199,7 +202,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
             "Accept": "application/vnd.github.v3+json"
         }
         data = {
-            "state": state,  # "success", "failure", "pending"
+            "state": state,
             "description": description,
             "context": "deployment/webhook"
         }
@@ -207,7 +210,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         try:
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
-            print(f"   ✅ Статус отправлен в GitHub: {state}")
+            print(f"   ✅ Статус '{state}' отправлен в GitHub для коммита {commit_sha[:7]}")
         except Exception as e:
             print(f"   ❌ Ошибка отправки статуса: {e}")
 

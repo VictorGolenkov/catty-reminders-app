@@ -16,12 +16,13 @@ git pull origin $BRANCH
 
 # 2. Если есть зависимости, обновляем их (убедитесь, что pip3 установлен)
 if [ -f "requirements.txt" ]; then
+    source venv/bin/activate
     echo "📦 Обновляем зависимости..."
     pip3 install -r requirements.txt
 fi
 
 # 3. Перезапускаем приложение через systemd
 echo "🔄 Перезапускаем сервис..."
-sudo systemctl restart catty-app
+sudo /usr/bin/systemctl restart catty-app
 
 echo "✅ Развертывание завершено!"
