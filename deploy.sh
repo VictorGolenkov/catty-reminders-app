@@ -22,7 +22,7 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # 3. Перезапускаем приложение через systemd
-COMMIT_HASH=$(git rev-parse --short HEAD)
+COMMIT_HASH=$(git rev-parse HEAD)
 echo "Код коммита: $COMMIT_HASH"
 echo "DEPLOY_REF=$COMMIT_HASH" > .env
 sudo /usr/bin/systemctl restart catty-app
