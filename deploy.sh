@@ -23,7 +23,7 @@ fi
 
 # 3. Перезапускаем приложение через systemd
 COMMIT_HASH=$(git rev-parse --short HEAD)
-cat $COMMIT_HASH
+echo "Код коммита: $COMMIT_HASH"
 echo "DEPLOY_REF=$COMMIT_HASH" > .env
 sudo /usr/bin/systemctl restart catty-app
 
