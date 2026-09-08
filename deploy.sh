@@ -22,7 +22,8 @@ if [ -f "requirements.txt" ]; then
 fi
 
 # 3. Перезапускаем приложение через systemd
-echo "🔄 Перезапускаем сервис..."
+COMMIT_HASH=$(git rev-parse --short HEAD)
+echo "DEPLOY_REF=$COMMIT_HASH" > .env
 sudo /usr/bin/systemctl restart catty-app
 
 echo "✅ Развертывание завершено!"
