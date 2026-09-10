@@ -2,6 +2,7 @@ name: CD-config
 
 on:
   release:
+    types: [published]
 
 jobs:
   pipeline:
@@ -33,10 +34,10 @@ jobs:
     - name: execute-remote-SSH-commands
       uses: appleboy/ssh-action@v1
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ vars.HOST }}
+        username: ${{ vars.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.PORT }}
+        port: ${{ vars.PORT }}
         script: |
           set -e
           cd /home/victor/Desktop/DevOps/Lab_1/catty-reminders-app
