@@ -35,4 +35,5 @@ jobs:
     - name: save-artifact
       uses: actions/upload-artifact@v7
       with:
+        name: test_result
         path: test_result.xml
