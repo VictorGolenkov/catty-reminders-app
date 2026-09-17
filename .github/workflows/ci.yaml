@@ -15,6 +15,13 @@ jobs:
     - name: checkout-code
       uses: actions/checkout@v7
 
+    - name: Lint Dockerfile
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+       dockerfile: Dockerfile
+       failure-threshold: warning
+       continue-on-error: true
+
     - name: setup-python
       uses: actions/setup-python@v7
       with:
