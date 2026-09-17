@@ -42,7 +42,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        image: ghcr.io/victorgolenkov/catty-reminders-app
+        images: ghcr.io/victorgolenkov/catty-reminders-app
         tags: |
           type=sha,format=long
           type=raw,value=latest
