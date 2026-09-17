@@ -37,3 +37,27 @@ jobs:
       with:
         name: test_result
         path: test_result.xml
+
+    - name: tag-image
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        image: ghcr.io/victorgolenkov/catty-reminders-app
+        tags: |
+          type=sha,format=long
+          type=raw,value=latest
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: create-image
+      uses: docker/build-push-action@v7
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        build-args: DEPLOY_REF=${{ github.sha }}
