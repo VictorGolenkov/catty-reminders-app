@@ -30,23 +30,18 @@ jobs:
         port: ${{ vars.PORT }}
         script: |
           set -e
-          cd /home/victor/Desktop/DevOps/Lab_1/catty-reminders-app
-          git fetch origin --tags
-          git checkout ${{ env.RELEASE_HASH }}
 
-          DEPLOY_REF=$(git rev-parse HEAD)
-          echo "DEPLOY_REF=$DEPLOY_REF" > .env.deploy
-          echo "Deployed version: $DEPLOY_REF"
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u victorgolenkov --password-stdin
 
-          if [ -f "requirements.txt" ]; then
-              source venv/bin/activate
-              pip install -r requirements.txt
-          fi
+          docker pull ghcr.io/victorgolenkov/catty-reminders-app:${{ env.RELEASE_HASH }}
 
-          sudo /usr/bin/systemctl restart catty-app
+          docker stop catty-app || true
+          docker rm catty-app || true
+
+          docker run -d --name catty-app -p 8181:8181 ghcr.io/victorgolenkov/catty-reminders-app:${{ env.RELEASE_HASH }}
           sleep 4
 
-          if sudo systemctl is-active --quiet catty-app; then
+          if docker ps | grep -q catty-app; then
               echo "Deployment completed successfully"
           else
               echo "ERROR: Application failed to start"

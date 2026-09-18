@@ -19,8 +19,8 @@ jobs:
       uses: hadolint/hadolint-action@v3.1.0
       continue-on-error: true
       with:
-       dockerfile: Dockerfile
-       failure-threshold: warning
+        dockerfile: Dockerfile
+        failure-threshold: warning
 
     - name: setup-python
       uses: actions/setup-python@v7
