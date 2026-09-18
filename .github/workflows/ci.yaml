@@ -54,7 +54,7 @@ jobs:
       with:
         images: ghcr.io/victorgolenkov/catty-reminders-app
         tags: |
-          type=sha,format=long
+          type=raw,value=${{ github.sha }}
           type=raw,value=latest
 
     - name: Log in to GitHub Container Registry
