@@ -1,0 +1,12 @@
+ version: '3.8'
+
+services:
+  nginx:
+    image:
+    ports:
+
+    depends_on:
+      - db
+
+  db:
+    deploy:
