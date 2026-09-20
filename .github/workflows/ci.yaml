@@ -3,12 +3,12 @@ name: CI-config
 on:
   push:
     branches:
-      - lab3
-      - 'lab3_autotests*'
+      - lab4
+      - 'lab4_autotests*'
   pull_request:
     branches:
-      - lab3
-      - 'lab3_autotests*'
+      - lab4
+      - 'lab4_autotests*'
 jobs:
   pipeline:
     runs-on: ubuntu-latest
