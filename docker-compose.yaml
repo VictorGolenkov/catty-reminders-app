@@ -1,12 +1,25 @@
- version: '3.8'
-
 services:
-  nginx:
-    image:
+  app:
+    image: ghcr.io/victorgolenkov/catty-reminders-app:latest
     ports:
-
+      - "8181:8181"
+    environment:
+      - DATABASE_URL=mysql://user:pass@db:3306/catty_reminders
     depends_on:
       - db
 
+
   db:
-    deploy:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=catty
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pass
+    volumes:
+      - db-data:/var/lib/mysql
+
+
+volumes:
+  db-data:
+
