@@ -52,6 +52,20 @@ jobs:
         docker compose -f docker-compose.yaml -f docker-compose.ci.yaml logs app
         docker compose -f docker-compose.yaml -f docker-compose.ci.yaml logs db
 
+    - name: wait-for-app
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8181/login > /dev/null; then
+            echo "App is up"
+            exit 0
+          fi
+          echo "Waiting for app... ($i)"
+          sleep 2
+        done
+        echo "App did not become ready in time"
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml logs app
+        exit 1
+
     - name: start-tests
       env:
         PYTHONPATH: ${{ github.workspace }}
