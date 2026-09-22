@@ -45,6 +45,13 @@ jobs:
         docker compose -f docker-compose.yaml -f docker-compose.ci.yaml up -d
         docker compose -f docker-compose.yaml -f docker-compose.ci.yaml ps
 
+    - name: show-app-logs
+      if: always()
+      run: |
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml ps
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml logs app
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml logs db
+
     - name: start-tests
       env:
         PYTHONPATH: ${{ github.workspace }}
@@ -53,11 +60,6 @@ jobs:
 
     - name: stop-stack
       run: docker compose -f docker-compose.yaml -f docker-compose.ci.yaml down -v
-
-    - name: start-tests
-      env:
-        PYTHONPATH: ${{ github.workspace }}
-      run: python -m pytest tests/ --junitxml=test_result.xml
 
     - name: save-artifact
       uses: actions/upload-artifact@v7
