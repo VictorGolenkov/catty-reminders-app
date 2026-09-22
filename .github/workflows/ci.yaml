@@ -16,20 +16,6 @@ jobs:
       contents: read
       packages: write
 
-    services:
-      db:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: mypass
-          MYSQL_DATABASE: catty_reminders
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
     - name: checkout-code
       uses: actions/checkout@v7
@@ -51,10 +37,22 @@ jobs:
         pip install -r requirements.txt
         playwright install --with-deps chromium
 
-    - name: run-catty-app
+    - name: build-image-for-ci
+      run: docker build -t catty-reminders-app:ci .
+
+    - name: start-stack
       run: |
-        uvicorn app.main:app --host 0.0.0.0 --port 8181 &
-        sleep 5
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml up -d
+        docker compose -f docker-compose.yaml -f docker-compose.ci.yaml ps
+
+    - name: start-tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+        BASE_URL: http://localhost:8181
+      run: python -m pytest tests/ --junitxml=test_result.xml
+
+    - name: stop-stack
+      run: docker compose -f docker-compose.yaml -f docker-compose.ci.yaml down -v
 
     - name: start-tests
       env:

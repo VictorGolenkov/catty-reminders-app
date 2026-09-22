@@ -1,0 +1,15 @@
+services:
+  app:
+    image: catty-reminders-app:ci
+    environment:
+      - DATABASE_URL=mysql://user:pass@db:3306/catty_reminders
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmypass"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
